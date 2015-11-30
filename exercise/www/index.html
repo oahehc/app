@@ -28,16 +28,19 @@
 			$("div#three").animate({color: "transparent"}, 1000);
 		}
 		function count_two(){
+			$("div#three").css("display","none");
 			$("div#two").css("display","block");
 			$("div#two").css("color","black");
 			$("div#two").animate({color: "transparent"}, 1000);
 		}
 		function count_one(){
+			$("div#two").css("display","none");
 			$("div#one").css("display","block");
 			$("div#one").css("color","black");
 			$("div#one").animate({color: "transparent"}, 1000);
 		}
 		function count_start(){
+			$("div#one").css("display","none");
 			$("div#start").css("display","block");
 			$("div#start").css("color","black");
 			$("div#start").animate({color: "transparent"}, 1000);
@@ -126,14 +129,19 @@
 				start_min = Math.floor(start_time/60);
 				start_sec = start_time%60;
 				end_min = Math.floor(end_time/60);
-				end_sec = end_time%60;								
+				end_sec = end_time%60;	
+					
+				//clear last rest div
+					if(i!=round)	
+					{
 					content = content 
 								+ "<div class='list_content round_" + i + " rest_" + i + "'>"  
 								+ "<div>" + format_adjust(start_min) + ":" + format_adjust(start_sec) + " ~ " + format_adjust(end_min) + ":" + format_adjust(end_sec) + "</div>" 
 								+ "<div>Rest</div>" 
-								+ "</div><div style='clear:both'></div>";							
-							
-				$("div.list").append(content);		
+								+ "</div><div style='clear:both'></div>";
+					}								
+			
+			$("div.list").append(content);
 			}
 		}
 			function format_adjust(x){
@@ -157,11 +165,15 @@
 			var div = Math.floor(time/(parseInt(workout_period)+parseInt(rest_period))) + 1;
 			
 			/*div > round => close*/
-			if(div > round)
+			if((div==round)&&(remind>=workout_period))
 			{
-			var rest_class = "div.rest_" + (div-1);
-			$(rest_class).removeAttr("id");
-			$(rest_class).attr("id", "close");	
+			var workout_class = "div.workout_" + (div);
+			$(workout_class).removeAttr("id");
+			$(workout_class).attr("id", "close");	
+				/*
+				var rest_class = "div.rest_" + (div);
+				$(rest_class).attr("id", "close");	
+				*/
 			/*change button*/
 			$("input.pause").css("display","none");
 			$("input.finish").css("display","inline");
@@ -208,7 +220,19 @@
 			count_down_start();
 			setTimeout("clock_start()", 4000);
 			setTimeout("list_status_update()", 4000);
+		}		
+		/*reset button*/
+		function exercise_reset(){
+			$("input.text").val("");
+			$("input#workout").focus();
+		}		
+		/*label click select content*/
+		function text_select(x){
+			var id = "input#" + x;
+			$(id).select();
 		}
+		
+		
 		/*clock pause and stop*/		
 		function clock_pause(){
 			alert('Click \'Yes\' to continue');
@@ -242,14 +266,14 @@
 
 <!--setting input-->
 <div class="setting">
-	<input class="data" id="workout" type="number" max="180" min="0" step="1" name="workout" value=60>
-		<label for="workout">Workout(sec)</label><br>
-	<input class="data" id="rest" type="number" max="180" min="0" step="1" name="rest" value=60>
-		<label for="rest">Rest(sec)</label><br>
-	<input class="data" id="round" type="number" max="10" min="1" step="1" name="round" value=5>
-		<label for="round">Round</label><br>
+	<input class="data text" id="workout" type="number" max="180" min="0" step="1" name="workout" value=60>
+		<label for="workout" onclick="text_select('workout')">Workout(sec)</label><br>
+	<input class="data text" id="rest" type="number" max="180" min="0" step="1" name="rest" value=60>
+		<label for="rest" onclick="text_select('rest')">Rest(sec)</label><br>
+	<input class="data text" id="round" type="number" max="10" min="1" step="1" name="round" value=5>
+		<label for="round" onclick="text_select('round')">Round</label><br>
 	<input class="data" type="button" value="START" onclick="exercise_start()">
-	<input class="data" type="reset" value="RESET">
+	<input class="data" type="button" value="RESET" onclick="exercise_reset()">
 	<input type="hidden" class="time" value=0>
 </div>
 
@@ -281,9 +305,9 @@
 	
 	<div style="clear:both"></div>
 	<input class="pause" type="button" value="PAUSE" onclick="clock_pause()">
-	<input class="pause" type="button" value="STOP" onclick="clock_stop()">
+	<input class="pause right" type="button" value="STOP" onclick="clock_stop()">
 	<input class="finish" type="button" value="Re-START" onclick="exercise_start()">
-	<input class="finish" type="button" value="SETTING" onclick="re_setting()">
+	<input class="finish right" type="button" value="SETTING" onclick="re_setting()">
 </div>
 
 

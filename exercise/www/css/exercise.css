@@ -1,22 +1,15 @@
 /*
 style for exercise
 */
-			.test{
-				margin:10px;
-				padding:10px;
-				min-height:100px;
-				font-size:1.5em;
-				background-color:gray;
-			}
-
 body{
 	font-family:Calibri, Arial, 微軟正黑體;
 	background-color:black;
 	color:white;
 	font-size:1.5em;
+	overflow:hidden;
 }
 input{
-	font-size:1.5em;
+	font-size:1.2em;
 	margin:5px;
 }
 	input.data{
@@ -24,11 +17,16 @@ input{
 		width:150px;
 	}
 	input.pause{
-		width:142px;
+		width:130px;
+		margin:5px;
 	}
 	input.finish{
-		font-size:1.2em;
-		width:142px;
+		width:130px;
+		margin:5px;
+		font-size:0.9em;
+	}
+	input.right{
+		margin-left:30px;
 	}
 	
 
@@ -61,7 +59,6 @@ input{
 		#ongoing{
 			background-color:#DDDD33;
 			font-weight:bolder;
-			font-size:1.1em;
 		}
 		#close{
 			background-color:#333;			
@@ -69,7 +66,7 @@ input{
 .count_down{
 	display:none;
 	position:fixed;
-	background-color:#CCC;
+	background-color:rgba(200,200, 200, 0.9);
 	color:black;
 	font-size:5em;
 	top:50%;
@@ -170,10 +167,3 @@ input{
 			#G div{
 				border-bottom:1px black solid;
 			}
-			
-
-@media (max-width: 400px){
-	input{
-		font-size:1.2em;
-	}
-}
