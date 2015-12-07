@@ -14,11 +14,10 @@
 	-->	
 	<!--
 	-->	
-	<link rel="stylesheet" href="ext/jquery.mobile-1.4.5.css">
-	<script src="ext/jquery-2.1.4.min.js"></script>
-	<script src="ext/jquery.mobile-1.4.5.js"></script>
+	<link rel="stylesheet" href="js/jquery.mobile-1.4.5.css">
+	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/jquery.mobile-1.4.5.js"></script>
 	
-	<script type="text/javascript" src="ext/jquery.cookie.js"></script>
 	
 	<!--style by CSS-->
 	<style>
@@ -218,10 +217,7 @@
 			document.decision.action.value = "";		
 			$(".ui-dialog").dialog("close");
 		})
-		
-		//
-		
-	});
+	});	
 	
 	function alert_dialog(msg){
 		//show dialog

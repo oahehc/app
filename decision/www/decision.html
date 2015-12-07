@@ -12,13 +12,327 @@
 	<title>Decision</title>
 </head>
 	<script language="JavaScript">
+		$(function(){
+			//close dialog msg for custom alert
+			$("input.close").click(function(){	
+				$(".ui-dialog").dialog("close");
+			})
+			
+			//purge localStorage
+			$("input#purge_data").click(function(){
+				localStorage.clear();
+				window.location.reload();
+			})			
+		});	
+		//custom alert msg
+			function alert_dialog(msg){
+				//show dialog
+				$("#open_dialog").click();
+				
+				//show button for confirm
+				$("div#confirm_button").addClass('hide');
+				$("div#alert_button").removeClass();
+				
+				//set message to dialog
+				$("h1.msg").empty();	
+				$("h1.msg").append(msg);
+			}		
+	
+		
+		
+
+		
 	</script>
 <body>
-<form method="post" name="decision" target="_self">
+<form name="decision" method="post" data-ajax="false" id="decision_form">
+	<input type="hidden" name="action">
+	<input type="hidden" name="title_code">
+	<input type="hidden" name="selection_title">
+	<input type="hidden" name="selection_content">
+	<input type="hidden" name="reserve">
+	<input type="hidden" name="draw_code">
+	<a href="#dialog_msg" id="open_dialog" style="display:none;"></a><!--hyperlink for open dialog msg-->
+
+	
+<!--Create-->
+<div data-role="page" id="CREATE" data-theme="b">
+	<div data-role="header" data-position="fixed">
+		<h1>Create Your Selection</h1>
+		<div data-role="navbar" data-iconpos="left">
+			<ul>
+				<li><a href="#CREATE" data-icon="plus" class="ui-btn-active ui-state-persist">CREATE</a></li>
+				<li><a href="#LIST" data-icon="bars">LIST</a></li>
+				<li><a href="#DRAW" data-icon="grid">DRAW</a></li>
+				<li><a href="#SET" data-icon="gear">SET</a></li>
+			</ul>
+		</div>
+	</div>
+	<div data-role="content">
+		<input id="input_title" type="text" name="title" placeholder="Title" maxlength=20 autofocus>
+		<textarea name="selection" placeholder="Selection 1&#10;Selection 2&#10;Selection 3&#10;..."></textarea>
+		<div data-role="controlgroup" data-type="horizontal">
+			<input type="button" value="Create" onclick="create_selection()">
+			<input type="button" value="Reset" onclick="form_reset()">
+		</div>
+	</div>
+	<div data-role="footer" data-position="fixed">
+		<h1>Oahehc@2015</h1>
+	</div>
+</div>
 
 
+<!--LIST-->
+<div data-role="page" id="LIST" data-theme="b">
+	<div data-role="header" data-position="fixed">
+		<h1>Select a Group to Draw</h1>
+		<div data-role="navbar" data-iconpos="left">
+			<ul>
+				<li><a href="#CREATE" data-icon="plus">CREATE</a></li>
+				<li><a href="#LIST" data-icon="bars" class="ui-btn-active ui-state-persist">LIST</a></li>
+				<li><a href="#DRAW" data-icon="grid">DRAW</a></li>
+				<li><a href="#SET" data-icon="gear">SET</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div data-role="content">
+		<?php
+//echo $delete_selection;
+//print_r($array_edit);	
+//echo $_SESSION["session_openlist"];
+		//select and show last x records
+		echo "<h2>Recent</h2>";
+		$select_last_title = "select distinct code,title from decision where reserve!='Y' and code in $string_title group by code order by create_date desc";
+		$result_last_title = mysql_query($select_last_title);
+		$num_last_title = mysql_num_rows($result_last_title);
+		
+			for($i=0;$i<$num_last_title;$i++)
+			{
+			$data_last_title = mysql_fetch_row($result_last_title);
+			
+			$select_selections = "select selection_content from decision where code='".$data_last_title[0]."' order by selection_content";
+			$result_selections = mysql_query($select_selections);
+			$num_selections = mysql_num_rows($result_selections);	
+
+			//load default open for editing list
+			if($_SESSION["session_openlist"] == $data_last_title[0])
+			{$collapsed_setting = "false";}
+			else
+			{$collapsed_setting = "true";}
+			
+			echo "<div data-role='collapsible' data-collapsed='$collapsed_setting'>";
+			echo "<h4>".$data_last_title[1]."<span class='ui-li-count'>".$num_selections."</span></h4>";
+				echo "<ul data-role='listview'>";
+				//function line
+				echo "<li data-icon='grid' data-theme='a' class='function'>";
+					echo "<div class='function ui-btn ui-icon-grid ui-btn-icon-left' onclick=\"start_draw('".$data_last_title[0]."')\">Draw</div>";
+					echo "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"add_myfavor('".$data_last_title[0]."')\">Favor</div>";
+					echo "<div class='function ui-btn ui-icon-edit ui-btn-icon-left'><a href='#dialog_".$data_last_title[0]."' data-rel='dialog' class='fill'>Edit</a></div>";
+					echo "<div class='function ui-btn ui-icon-delete ui-btn-icon-left' onclick=\"delete_group('".$data_last_title[0]."','".$data_last_title[1]."')\">Delete</div>";			
+				echo "</li>";
+				
+				for($j=0;$j<$num_selections;$j++)
+				{
+				$data_selections = mysql_fetch_row($result_selections);
+				echo "<li data-icon='delete'>";
+					echo "<a href='#'>";
+					echo $data_selections[0];
+					echo "</a>";
+					echo "<a href='#' onclick=\"delete_selection('".$data_last_title[0]."','".$data_selections[0]."')\"></a>";
+//echo "<a href='#' class='delete_function delete_".$data_last_title[0]."' onclick=\"delete_selection('".$data_last_title[0]."','".$data_selections[0]."')\"></a>";
+//echo "<a href='#' id='delete_".$data_last_title[0]."'></a>";
+				echo "</li>";
+				}
+				
+				//list for new selection create
+				echo "<li data-icon='plus'>";
+					echo "<a class='unpadding' href='#'>";
+					echo "<input class='small new_selection_$data_last_title[0]'>";
+					echo "</a>";	
+					echo "<a href='#' onclick=\"add_selection('".$data_last_title[0]."','".$data_last_title[1]."','N')\">";	
+					echo "</a>";						
+				echo "</li>";						
+				
+				echo "</ul>";
+			echo "</div>";
+			}
+			
+		//select and show reserve records		
+		echo "<h2>★ My Favor</h2>";
+		$select_favor_title = "select distinct code,title from decision where reserve='Y' and code in $string_title group by code order by create_date desc";
+		$result_favor_title = mysql_query($select_favor_title);
+		$num_favor_title = mysql_num_rows($result_favor_title);
+		
+			for($i=0;$i<$num_favor_title;$i++)
+			{
+			$data_favor_title = mysql_fetch_row($result_favor_title);
+			
+			$select_selections = "select selection_content from decision where code='".$data_favor_title[0]."' order by selection_content";
+			$result_selections = mysql_query($select_selections);
+			$num_selections = mysql_num_rows($result_selections);			
+			
+			//load default open for editing list
+			if($_SESSION["session_openlist"] == $data_favor_title[0])			
+			{$collapsed_setting = "false";}
+			else
+			{$collapsed_setting = "true";}
+			
+			echo "<div data-role='collapsible' data-collapsed='$collapsed_setting'>";
+			echo "<h4>".$data_favor_title[1]."<span class='ui-li-count'>".$num_selections."</span></h4>";
+				echo "<ul data-role='listview'>";
+				//function line
+				echo "<li data-icon='grid' data-theme='a' class='function'>";
+					echo "<div class='function ui-btn ui-icon-grid ui-btn-icon-left' onclick=\"start_draw('".$data_favor_title[0]."')\">Draw</div>";
+					echo "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"remove_myfavor('".$data_favor_title[0]."')\">Favor</div>";
+					echo "<div class='function ui-btn ui-icon-edit ui-btn-icon-left'><a href='#dialog_".$data_favor_title[0]."' data-rel='dialog' class='fill'>Edit</a></div>";
+					echo "<div class='function ui-btn ui-icon-delete ui-btn-icon-left' onclick=\"delete_group('".$data_favor_title[0]."')\">Delete</div>";			
+				echo "</li>";
+				
+				for($j=0;$j<$num_selections;$j++)
+				{
+				$data_selections = mysql_fetch_row($result_selections);
+				echo "<li data-icon='delete'>";
+					echo "<a href='#'>";
+					echo $data_selections[0];
+					echo "</a>";
+					echo "<a href='#' onclick=\"delete_selection('".$data_favor_title[0]."','".$data_selections[0]."')\">";
+					echo "</a>";
+				echo "</li>";
+				}
+				
+				//list for new selection create
+				echo "<li data-icon='plus'>";
+					echo "<a class='unpadding' href='#'>";
+					echo "<input class='small new_selection_$data_favor_title[0]'>";
+					echo "</a>";	
+					echo "<a href='#' onclick=\"add_selection('".$data_favor_title[0]."','".$data_favor_title[1]."','Y')\">";	
+					echo "</a>";			
+				echo "</li>";	
+				
+				echo "</ul>";
+			echo "</div>";
+			}
+		?>	
+	</div>
+	
+	<div data-role="footer" data-position="fixed">
+		<h1>Oahehc@2015</h1>
+	</div>
+</div>
+	<!--dialog for title rename-->
+	<?php
+	$select_all_title = "select distinct code,title from decision group by code order by create_date desc";
+	$result_all_title = mysql_query($select_all_title);
+	$num_all_title = mysql_num_rows($result_all_title);	
+	
+	for($i=0;$i<$num_all_title;$i++)
+	{
+	$data_all_title = mysql_fetch_row($result_all_title);
+	
+	echo "<div data-role='dialog' id='dialog_".$data_all_title[0]."' data-theme='b' data-close-btn='right'>";
+		echo "<div data-role='header' data-position='fixed'>";
+			echo "<h1>Input New Title</h1>";
+		echo "</div>";
+		echo "<div data-role='content'>";
+			echo "<input type='text' class='new_title_".$data_all_title[0]."' value='".$data_all_title[1]."' autofocus>";
+			echo "<input type='button' value='Change Name' onclick=\"rename_title('".$data_all_title[0]."')\">";
+		echo "</div>";
+	echo "</div>";
+	}
+	?>
 
 
+<!--Draw-->
+<div data-role="page" id="DRAW" data-theme="b">
+	<div data-role="header" data-position="fixed">
+		<h1>Click to Draw</h1>
+		<div data-role="navbar" data-iconpos="left">
+			<ul>
+				<li><a href="#CREATE" data-icon="plus">CREATE</a></li>
+				<li><a href="#LIST" data-icon="bars">LIST</a></li>
+				<li><a href="#DRAW" data-icon="grid" class="ui-btn-active ui-state-persist">DRAW</a></li>
+				<li><a href="#SET" data-icon="gear">SET</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div data-role="content">
+	<?php
+	//receive selected group
+	if(!empty($_POST["draw_code"]))
+	{$draw_code = $_POST["draw_code"];}
+	elseif(!empty($_SESSION["session_TitleCode"]))
+	{$draw_code = $_SESSION["session_TitleCode"];}
+	
+	
+	//list for selections
+	$select_draw_selections = "select title,selection_content from decision where code='$draw_code' order by selection_content";
+	$result_draw_selections = mysql_query($select_draw_selections);
+	$num_draw_selections = mysql_num_rows($result_draw_selections);
+	
+		//draw button + option number
+		echo "<input type='button' value='Start' id='start_draw' data-num='$num_draw_selections'>";
+		
+		//adjust width base on option number
+		$width = "w".min(ceil($num_draw_selections/10),$max_width_list);		
+			
+		for($i=0;$i<$num_draw_selections;$i++)
+		{		
+		$data_draw_selections = mysql_fetch_row($result_draw_selections);
+		echo "<div class='selection $width option_$i'>$data_draw_selections[1]</div>";
+		}
+	?>
+	</div>
+	
+	<div data-role="footer" data-position="fixed">
+		<h1>Oahehc@2015</h1>
+	</div>
+</div>
+
+
+<!--SET-->
+<div data-role="page" id="SET" data-theme="b">
+	<div data-role="header" data-position="fixed">
+		<h1>Setting</h1>
+		<div data-role="navbar" data-iconpos="left">
+			<ul>
+				<li><a href="#CREATE" data-icon="plus">CREATE</a></li>
+				<li><a href="#LIST" data-icon="bars">LIST</a></li>
+				<li><a href="#DRAW" data-icon="grid">DRAW</a></li>
+				<li><a href="#SET" data-icon="gear" class="ui-btn-active ui-state-persist">SET</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div data-role="content">
+		<input type="button" value="Purge Data" id="purge_data">
+	</div>
+
+	<div data-role="footer" data-position="fixed">
+		<h1>Oahehc@2015</h1>
+	</div>
+</div>
+
+
+<!--dialog for alert and confirm msg-->
+<div data-role="dialog" id="dialog_msg" data-theme="b" data-close-btn="right">
+	<div data-role="header" data-position="fixed">
+		<h1 class="msg"></h1>
+	</div>
+	<div data-role="content">
+		<div data-role="navbar" class="hide" id="confirm_button">
+			<ul>
+				<li><input type="submit" value="Yes" id="confirm"></li>
+				<li><input type="button" value="No" class="cancel"></li>
+			</ul>
+		</div>
+		<div data-role="navbar" class="hide" id="alert_button">
+			<ul class="hide" id="alert_button">
+				<li><input type="button" value="Yes" class="close"></li>
+			</ul>
+		</div>
+	</div>
+</div>
 
 
 </form>
@@ -28,3 +342,166 @@
 </script>
 </body>
 </html>
+<script>
+/*create page*/
+	function form_reset(){
+		document.decision.title.value = "";		
+		document.decision.selection.value = "";		
+		document.decision.title.focus();
+	}
+	function create_selection(){
+		var title = "decision_" + document.decision.title.value;
+		var selection = document.decision.selection.value;
+		var title_check = string_check(title);
+		var selection_check = string_check(selection);
+		var title_duplicate = localStorage.getItem(title);
+		if(title == "")
+		{
+		document.decision.title.focus();
+		alert_dialog("[ERROR]\nPlease input a title");
+		}
+		else if(title_check != "")
+		{
+		document.decision.title.select();
+		alert_dialog("[ERROR]\nPlease don\'t use " + title_check + " for title");
+		}
+		else if(selection == "")
+		{
+		document.decision.selection.focus();
+		alert_dialog("[ERROR]\nPlease input selection");
+		}
+		else if(selection_check != "")
+		{
+		document.decision.selection.select();
+		alert_dialog("[ERROR]\nPlease don\'t use " + selection_check + " for selection");
+		}
+		else if(title_duplicate != null && title_duplicate !== undefined)
+		{
+		document.decision.selection.select();
+		alert_dialog("[ERROR]\nTitle has been used,\nplease choose another name.");
+		}
+		else
+		{
+		/*selection format adjust*/
+		var array_selection = selection.split("\n");
+		var new_selection = cleanArray(array_selection).join("!!");
+
+		/*set to localstorage*/
+		localStorage[title] = new_selection;
+		
+		/*clear input*/
+		document.decision.title.value = "";
+		document.decision.selection.value = "";
+		
+		/*change to draw page*/
+		document.decision.draw_code.value = title;
+		location.replace('decision.html#DRAW');
+		}
+	}
+		/*special character check*/
+		function string_check(x){
+			var array_result = new Array;
+			var check = new String;
+			var result = new String;
+			for(var i=0;i<x.length;i++)
+			{
+				check = x[i].match('[0-9|A-Za-z|@$()_|\n-]');
+				if(check === null)
+				{
+					if((jQuery.inArray(x[i], array_result)) == -1)//remove repeated character
+					{array_result.push(x[i]);}
+				}
+			}
+			var result = array_result.join(" ");
+			return result;
+		}	
+		/*remove empty element*/
+		function cleanArray(actual) {
+		  var newArray = new Array();
+		  for (var i = 0; i < actual.length; i++) {
+			if (actual[i]) {
+			  newArray.push(actual[i]);
+			}
+		  }
+		  return newArray;
+		}
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+/*list page*/
+	function delete_selection(x,y){
+		document.decision.title_code.value = x;		
+		document.decision.selection_content.value = y;		
+		document.decision.action.value = "delete_selection";
+		confirm_dialog("[NOTICE]\nConfirm to remove this selection : " + y);
+	}
+	function add_selection(x,y,Z){
+		var input_class = "input.new_selection_" + x;
+		var new_selection = $(input_class).val();
+		if(new_selection == "")
+		{alert_dialog("[ERROR]\nPlease input new selection");}
+		else
+		{
+		document.decision.title_code.value = x;		
+		document.decision.selection_title.value = y;		
+		document.decision.reserve.value = Z;		
+		document.decision.selection_content.value = new_selection;		
+		document.decision.action.value = "add_selection";
+		document.decision.submit();
+		}				
+	}
+		
+	/*function line at list page*/
+	function add_myfavor(x){
+		document.decision.title_code.value = x;					
+		document.decision.action.value = "add_myfavor";
+		document.decision.submit();
+	}
+	function remove_myfavor(x){
+		document.decision.title_code.value = x;					
+		document.decision.action.value = "remove_myfavor";
+		confirm_dialog("[NOTICE]\nConfirm to remove this group from myfavor");
+	}
+	function start_draw(x){
+		document.decision.draw_code.value = x;	
+		document.decision.action.value = "start_draw";	
+		document.decision.submit();	
+	}
+	function delete_group(x,y){
+		document.decision.title_code.value = x;		
+		document.decision.action.value = "delete_group";
+		confirm_dialog("[NOTICE]\nConfirm to delete group : " + y);
+	}
+	function rename_title(x){
+		var title_class = "input.new_title_" + x;
+		var new_title = $(title_class).val();
+		if(new_title == "")
+		{alert_dialog("[ERROR]\nPlease input new title");}
+		else
+		{
+		document.decision.selection_title.value = new_title;
+		document.decision.title_code.value = x;
+		document.decision.action.value = "rename_title";
+		document.decision.submit();
+		}	
+	}
+	
+
+</script>
