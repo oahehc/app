@@ -12,18 +12,76 @@
 	<title>Decision</title>
 </head>
 	<script language="JavaScript">
+		var constants = {
+			'title_add': 'decision_',
+			'selection_separate': '!!',
+			'max_width': 5,
+			'num_last_record': 5
+		};
+	
+	
 		$(function(){
-			//close dialog msg for custom alert
+		//close dialog msg for custom alert
 			$("input.close").click(function(){	
 				$(".ui-dialog").dialog("close");
 			})
 			
-			//purge localStorage
+		//purge localStorage
 			$("input#purge_data").click(function(){
 				localStorage.clear();
 				window.location.reload();
-			})			
+			})	
+
+		//start draw
+			$("input#start_draw").click(function(){
+				//set parameter
+				var option = $(this).data('num');
+				var tag = -1;
+				var now = Date.now();
+
+				//ramdom click time
+				var total_click = Math.round(Math.random()*option) + option*5 + (now % option);		
+				
+				//clear all selected
+				$("div#selected").removeAttr("id");
+
+				//start drawing
+				drawing(tag,option,total_click);
+			})
+				function drawing(tag,option,total_click){
+					if(total_click>0)
+					{
+					//remove old selected option
+					var start_class = "div.option_" + (tag % option);
+					$(start_class).removeAttr("id");
+					//selected new option
+					var new_class = "div.option_" + ((tag+1) % option);
+					$(new_class).attr("id", "selected");
+
+					//decrease delay time
+					if(total_click == 1)
+					{var delay_time = 10;}
+					else
+					{var delay_time = 1000/total_click;}
+					
+					tag++;
+					total_click--;
+					setTimeout(function(){drawing(tag,option,total_click);},delay_time);
+					}
+					else
+					{
+					//highlight final option
+					var start_class = "div.option_" + (tag % option);
+					$(start_class).removeAttr("id");
+					$(start_class).attr("id", "finish");
+					}
+				}	
+
+		//create list
+			
 		});	
+		
+		
 		//custom alert msg
 			function alert_dialog(msg){
 				//show dialog
@@ -39,19 +97,60 @@
 			}		
 	
 		
-		
+		//create draw content when draw title been updated
+			function create_draw_content(title){
+				//select localstorage
+				var selection = localStorage.getItem(title);
+				var array_selection = selection.split(constants.selection_separate);//selection separate character
+				
+				//set selection number
+				var selection_num = array_selection.length;
+				$("input#start_draw").data('num',selection_num); 
+				
+				//create selection
+					//selection width adjust
+					var width = "w" + Math.min(Math.ceil(array_selection.length/10), constants.max_width);
+				var selection_content = "";
+				for(var i=0;i<selection_num;i++)
+				{		
+				selection_content = selection_content + "<div class='selection " + width + " option_" +i+ "'>" + array_selection[i] + "</div>";
+				}
+				$("div#selection_content").empty();
+				$("div#selection_content").append(selection_content);
+			}
 
+		//function to filter localstorage
+			function select_localstorage(filter){
+				if(localStorage.length != 0)
+				{
+				var array_result = new Array;
+					for(var i=0; i<localStorage.length; i++)
+					{					
+						check = localStorage.key(i).str.indexOf(filter);
+						if(check === null)
+						{array_result.push(localStorage.key(i));}					
+					}
+
+				return array_result;
+				}
+				else
+				{
+				return false;
+				}
+			}
 		
 	</script>
 <body>
 <form name="decision" method="post" data-ajax="false" id="decision_form">
+	<a href="#dialog_msg" id="open_dialog" style="display:none;"></a><!--hyperlink for open dialog msg-->	
+	<!--
+	<input type="hidden" name="draw_title">
 	<input type="hidden" name="action">
 	<input type="hidden" name="title_code">
 	<input type="hidden" name="selection_title">
 	<input type="hidden" name="selection_content">
 	<input type="hidden" name="reserve">
-	<input type="hidden" name="draw_code">
-	<a href="#dialog_msg" id="open_dialog" style="display:none;"></a><!--hyperlink for open dialog msg-->
+	-->
 
 	
 <!--Create-->
@@ -96,10 +195,15 @@
 	</div>
 	
 	<div data-role="content">
-		<?php
-//echo $delete_selection;
-//print_r($array_edit);	
-//echo $_SESSION["session_openlist"];
+		<div id="list_last">
+			<h2>Recent</h2>
+		</div>
+		
+		<div id="favor_last">
+			<h2>★ My Favor</h2>
+		</div>
+	
+<!--
 		//select and show last x records
 		echo "<h2>Recent</h2>";
 		$select_last_title = "select distinct code,title from decision where reserve!='Y' and code in $string_title group by code order by create_date desc";
@@ -212,7 +316,7 @@
 				echo "</ul>";
 			echo "</div>";
 			}
-		?>	
+-->
 	</div>
 	
 	<div data-role="footer" data-position="fixed">
@@ -220,7 +324,7 @@
 	</div>
 </div>
 	<!--dialog for title rename-->
-	<?php
+<!--
 	$select_all_title = "select distinct code,title from decision group by code order by create_date desc";
 	$result_all_title = mysql_query($select_all_title);
 	$num_all_title = mysql_num_rows($result_all_title);	
@@ -239,7 +343,7 @@
 		echo "</div>";
 	echo "</div>";
 	}
-	?>
+-->
 
 
 <!--Draw-->
@@ -256,32 +360,10 @@
 		</div>
 	</div>
 	
-	<div data-role="content">
-	<?php
-	//receive selected group
-	if(!empty($_POST["draw_code"]))
-	{$draw_code = $_POST["draw_code"];}
-	elseif(!empty($_SESSION["session_TitleCode"]))
-	{$draw_code = $_SESSION["session_TitleCode"];}
-	
-	
-	//list for selections
-	$select_draw_selections = "select title,selection_content from decision where code='$draw_code' order by selection_content";
-	$result_draw_selections = mysql_query($select_draw_selections);
-	$num_draw_selections = mysql_num_rows($result_draw_selections);
-	
-		//draw button + option number
-		echo "<input type='button' value='Start' id='start_draw' data-num='$num_draw_selections'>";
-		
-		//adjust width base on option number
-		$width = "w".min(ceil($num_draw_selections/10),$max_width_list);		
-			
-		for($i=0;$i<$num_draw_selections;$i++)
-		{		
-		$data_draw_selections = mysql_fetch_row($result_draw_selections);
-		echo "<div class='selection $width option_$i'>$data_draw_selections[1]</div>";
-		}
-	?>
+	<div data-role="content" id="draw_content">
+		<input type="button" value="Start" id="start_draw" data-num="">
+		<div id="selection_content">
+		</div>
 	</div>
 	
 	<div data-role="footer" data-position="fixed">
@@ -350,8 +432,8 @@
 		document.decision.title.focus();
 	}
 	function create_selection(){
-		var title = "decision_" + document.decision.title.value;
-		var selection = document.decision.selection.value;
+		var title = constants.title_add + document.decision.title.value.trim();
+		var selection = document.decision.selection.value.trim();
 		var title_check = string_check(title);
 		var selection_check = string_check(selection);
 		var title_duplicate = localStorage.getItem(title);
@@ -362,6 +444,8 @@
 		}
 		else if(title_check != "")
 		{
+			if((title_check == "") || (title_check == " "))
+			{title_check = "space";}
 		document.decision.title.select();
 		alert_dialog("[ERROR]\nPlease don\'t use " + title_check + " for title");
 		}
@@ -372,6 +456,8 @@
 		}
 		else if(selection_check != "")
 		{
+			if((selection_check == "") || (selection_check == " "))
+			{selection_check = "space";}
 		document.decision.selection.select();
 		alert_dialog("[ERROR]\nPlease don\'t use " + selection_check + " for selection");
 		}
@@ -384,7 +470,7 @@
 		{
 		/*selection format adjust*/
 		var array_selection = selection.split("\n");
-		var new_selection = cleanArray(array_selection).join("!!");
+		var new_selection = cleanArray(array_selection).join(constants.selection_separate);//selection separate character
 
 		/*set to localstorage*/
 		localStorage[title] = new_selection;
@@ -394,8 +480,8 @@
 		document.decision.selection.value = "";
 		
 		/*change to draw page*/
-		document.decision.draw_code.value = title;
 		location.replace('decision.html#DRAW');
+		create_draw_content(title);
 		}
 	}
 		/*special character check*/
@@ -425,83 +511,9 @@
 		  }
 		  return newArray;
 		}
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 /*list page*/
-	function delete_selection(x,y){
-		document.decision.title_code.value = x;		
-		document.decision.selection_content.value = y;		
-		document.decision.action.value = "delete_selection";
-		confirm_dialog("[NOTICE]\nConfirm to remove this selection : " + y);
-	}
-	function add_selection(x,y,Z){
-		var input_class = "input.new_selection_" + x;
-		var new_selection = $(input_class).val();
-		if(new_selection == "")
-		{alert_dialog("[ERROR]\nPlease input new selection");}
-		else
-		{
-		document.decision.title_code.value = x;		
-		document.decision.selection_title.value = y;		
-		document.decision.reserve.value = Z;		
-		document.decision.selection_content.value = new_selection;		
-		document.decision.action.value = "add_selection";
-		document.decision.submit();
-		}				
-	}
-		
-	/*function line at list page*/
-	function add_myfavor(x){
-		document.decision.title_code.value = x;					
-		document.decision.action.value = "add_myfavor";
-		document.decision.submit();
-	}
-	function remove_myfavor(x){
-		document.decision.title_code.value = x;					
-		document.decision.action.value = "remove_myfavor";
-		confirm_dialog("[NOTICE]\nConfirm to remove this group from myfavor");
-	}
-	function start_draw(x){
-		document.decision.draw_code.value = x;	
-		document.decision.action.value = "start_draw";	
-		document.decision.submit();	
-	}
-	function delete_group(x,y){
-		document.decision.title_code.value = x;		
-		document.decision.action.value = "delete_group";
-		confirm_dialog("[NOTICE]\nConfirm to delete group : " + y);
-	}
-	function rename_title(x){
-		var title_class = "input.new_title_" + x;
-		var new_title = $(title_class).val();
-		if(new_title == "")
-		{alert_dialog("[ERROR]\nPlease input new title");}
-		else
-		{
-		document.decision.selection_title.value = new_title;
-		document.decision.title_code.value = x;
-		document.decision.action.value = "rename_title";
-		document.decision.submit();
-		}	
-	}
 	
 
 </script>
