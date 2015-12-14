@@ -15,7 +15,9 @@
 		var constants = {
 			'title_add': 'decision_',
 			'selection_separate': '!!',
-			'max_width': 5
+			'max_width': 5,
+			'drawing_title': 'drawing_decision',
+			'editing_list': 'editing_decision'
 		};
 	
 	
@@ -86,9 +88,16 @@
 				var array_local_value = localStorage.getItem(array_local_title[j]).split(constants.selection_separate);
 				var local_title_adjust = array_local_title[j].replace(/^decision_/,"");
 				
+				//check if editing, default open list
+				var editing_list_title = localStorage.getItem(constants.editing_list);
+					if(editing_list_title == array_local_title[j])
+					{var close_list = "false";}
+					else
+					{var close_list = "true";}
+				
 				//navigator
 				list_content = list_content
-								+ "<div data-role='collapsible'>"
+								+ "<div data-role='collapsible' data-collapsed='" + close_list + "'>"
 								+ "<h4>" + local_title_adjust + "<span class='ui-li-count'>" + array_local_value.length + "</span></h4>"
 								+ "<ul data-role='listview'>"
 								+ "<li data-icon='grid' data-theme='a' class='function'>"
@@ -111,7 +120,7 @@
 				//add selection input
 				list_content = list_content
 								+ "<li data-icon='plus'>"
-								+ "<a class='unpadding' href='#'><input class='small new_selection_$data_last_title[0]'></a>"
+								+ "<a class='unpadding' href='#'><input class='small new_selection_" + local_title_adjust + "'></a>"
 								+ "<a href='#' onclick=\"add_selection('" + local_title_adjust + "')\"></a>"					
 								+ "</li>"					
 								+ "</ul>"
@@ -135,9 +144,15 @@
 			$("div#list_last").append(list_content);
 			
 			//create dialog for group title rename
-			$("div#dialog").empty();	
-			$("div#dialog").append(dialog_content);			
+			$("form#decision_form").append(dialog_content);	
 			}
+		
+		//create drawing content
+			var drawing_title_ = localStorage.getItem(constants.drawing_title); 
+			if(drawing_title_)
+			{create_draw_content(drawing_title_);}
+			
+			
 		});	
 		
 		
@@ -204,15 +219,7 @@
 <body>
 <form name="decision" method="post" data-ajax="false" id="decision_form">
 	<a href="#dialog_msg" id="open_dialog" style="display:none;"></a><!--hyperlink for open dialog msg-->	
-	<!--
-	<input type="hidden" name="draw_title">
-	<input type="hidden" name="action">
-	<input type="hidden" name="title_code">
-	<input type="hidden" name="selection_title">
-	<input type="hidden" name="selection_content">
-	<input type="hidden" name="reserve">
-	-->
-
+	
 	
 <!--Create-->
 <div data-role="page" id="CREATE" data-theme="b">
@@ -259,74 +266,15 @@
 		<div id="list_last"></div>		
 		<!--
 		<div id="favor_last">
+			<h2>★ My Favor</h2>
 		</div>
 		-->
-	
-<!--
-		//select and show reserve records		
-		echo "<h2>★ My Favor</h2>";
-		$select_favor_title = "select distinct code,title from decision where reserve='Y' and code in $string_title group by code order by create_date desc";
-		$result_favor_title = mysql_query($select_favor_title);
-		$num_favor_title = mysql_num_rows($result_favor_title);
-		
-			for($i=0;$i<$num_favor_title;$i++)
-			{
-			$data_favor_title = mysql_fetch_row($result_favor_title);
-			
-			$select_selections = "select selection_content from decision where code='".$data_favor_title[0]."' order by selection_content";
-			$result_selections = mysql_query($select_selections);
-			$num_selections = mysql_num_rows($result_selections);			
-			
-			//load default open for editing list
-			if($_SESSION["session_openlist"] == $data_favor_title[0])			
-			{$collapsed_setting = "false";}
-			else
-			{$collapsed_setting = "true";}
-			
-			echo "<div data-role='collapsible' data-collapsed='$collapsed_setting'>";
-			echo "<h4>".$data_favor_title[1]."<span class='ui-li-count'>".$num_selections."</span></h4>";
-				echo "<ul data-role='listview'>";
-				//function line
-				echo "<li data-icon='grid' data-theme='a' class='function'>";
-					echo "<div class='function ui-btn ui-icon-grid ui-btn-icon-left' onclick=\"start_draw('".$data_favor_title[0]."')\">Draw</div>";
-					echo "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"remove_myfavor('".$data_favor_title[0]."')\">Favor</div>";
-					echo "<div class='function ui-btn ui-icon-edit ui-btn-icon-left'><a href='#dialog_".$data_favor_title[0]."' data-rel='dialog' class='fill'>Edit</a></div>";
-					echo "<div class='function ui-btn ui-icon-delete ui-btn-icon-left' onclick=\"delete_group('".$data_favor_title[0]."')\">Delete</div>";			
-				echo "</li>";
-				
-				for($j=0;$j<$num_selections;$j++)
-				{
-				$data_selections = mysql_fetch_row($result_selections);
-				echo "<li data-icon='delete'>";
-					echo "<a href='#'>";
-					echo $data_selections[0];
-					echo "</a>";
-					echo "<a href='#' onclick=\"delete_selection('".$data_favor_title[0]."','".$data_selections[0]."')\">";
-					echo "</a>";
-				echo "</li>";
-				}
-				
-				//list for new selection create
-				echo "<li data-icon='plus'>";
-					echo "<a class='unpadding' href='#'>";
-					echo "<input class='small new_selection_$data_favor_title[0]'>";
-					echo "</a>";	
-					echo "<a href='#' onclick=\"add_selection('".$data_favor_title[0]."','".$data_favor_title[1]."','Y')\">";	
-					echo "</a>";			
-				echo "</li>";	
-				
-				echo "</ul>";
-			echo "</div>";
-			}
--->
 	</div>
 	
 	<div data-role="footer" data-position="fixed">
 		<h1>Oahehc@2015</h1>
 	</div>
 </div>
-	<!--dialog for title rename-->
-	<div id="dialog"></div>	
 	
 
 <!--Draw-->
@@ -400,6 +348,7 @@
 </div>
 
 
+
 </form>
 <script type="text/javascript" src="js/index.js"></script>
 <script type="text/javascript">
@@ -464,7 +413,8 @@
 		
 		/*change to draw page*/
 		location.replace('decision.html#DRAW');
-		create_draw_content(title);
+		localStorage.setItem(constants.drawing_title, title);
+		location.reload();
 		}
 	}
 		/*special character check*/
@@ -500,12 +450,44 @@
 	function start_draw(x){
 		var original_title = constants.title_add + x;
 		location.replace('decision.html#DRAW');
-		create_draw_content(original_title);
+		localStorage.setItem(constants.drawing_title, original_title);
+		location.reload();
 	}
 	function delete_group(x){
 		var original_title = constants.title_add + x;
 		localStorage.removeItem(original_title); 
 		location.replace('decision.html#LIST');
+		location.reload();
+	}
+	function add_selection(x){
+		var original_title = constants.title_add + x;
+		var new_selection_class = "input.new_selection_" + x;
+		var new_selection_value = $(new_selection_class).val();
+		var local_value = localStorage.getItem(original_title) + constants.selection_separate + new_selection_value;
+		localStorage.setItem(original_title, local_value);
+		localStorage.setItem(constants.editing_list, original_title);
+		location.reload();		
+	}
+	function delete_selection(title,selection){
+		var original_title = constants.title_add + title;
+		var array_local_value = localStorage.getItem(original_title).split(constants.selection_separate);
+		var index = array_local_value.indexOf(selection);
+		array_local_value.splice(index,1);	
+		var local_value = array_local_value.join(constants.selection_separate);		
+		localStorage.setItem(original_title, local_value);
+		localStorage.setItem(constants.editing_list, original_title);
+		location.reload();	
+	}
+	function rename_title(title){
+		var original_title = constants.title_add + title;
+		var local_value = localStorage.getItem(original_title);
+		var new_title_class = "input.new_title_" + title;
+		var new_title = constants.title_add + $(new_title_class).val();
+		
+		localStorage.setItem(new_title, local_value);
+		localStorage.removeItem(original_title); 
+		location.replace('decision.html#LIST');
+		location.reload();	
 	}
 
 </script>
