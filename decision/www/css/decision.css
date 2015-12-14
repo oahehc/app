@@ -64,7 +64,7 @@ div.selection{
 
 div.function{
 	float:left;
-	width:25%;
+	width:33%;
 	height:32px;
 	line-height:32px;
 	padding:0px;
@@ -97,19 +97,3 @@ h1.msg{
 div.hide{
 	display:none !important;
 }	
-
-/*custom delete icon*/	
-.ui-icon-customdelete:after{
-	background-image:url(pic/custom_delete.jpg);
-	background-image:url(pic/custom_delete.png);
-	background-size: 34px 38px;/*total 40*44*/
-	width: 34px;
-	height: 38px;
-	top: 0px;
-	left: 0px;
-	margin: 3px;
-	border-radius: 2px;
-}
-a.delete_function{
-	display:none !important;
-}

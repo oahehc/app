@@ -21,12 +21,7 @@
 		};
 	
 	
-		$(function(){
-		//close dialog msg for custom alert
-			$("input.close").click(function(){	
-				$(".ui-dialog").dialog("close");
-			})
-			
+		$(function(){			
 		//purge localStorage
 			$("input#purge_data").click(function(){
 				localStorage.clear();
@@ -83,6 +78,7 @@
 			if(array_local_title)
 			{
 			var list_content = "<h2>Recent</h2>";
+			var dialog_content = "";
 				for(var j=0;j<array_local_title.length;j++)
 				{
 				var array_local_value = localStorage.getItem(array_local_title[j]).split(constants.selection_separate);
@@ -102,11 +98,11 @@
 								+ "<ul data-role='listview'>"
 								+ "<li data-icon='grid' data-theme='a' class='function'>"
 								+ "<div class='function ui-btn ui-icon-grid ui-btn-icon-left' onclick=\"start_draw('" + local_title_adjust + "')\">Draw</div>"
-								+ "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"add_myfavor('" + local_title_adjust + "')\">Favor</div>"
 								+ "<div class='function ui-btn ui-icon-edit ui-btn-icon-left'><a href='#dialog_" + local_title_adjust + "' data-rel='dialog' class='fill'>Edit</a></div>"
 								+ "<div class='function ui-btn ui-icon-delete ui-btn-icon-left' onclick=\"delete_group('" + local_title_adjust + "')\">Delete</div>"		
-								+ "</li>";
-									
+								+ "</li>";								
+								//+ "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"add_myfavor('" + local_title_adjust + "')\">Favor</div>"	
+
 				//selection
 					for(var k=0;k<array_local_value.length;k++)
 					{
@@ -126,17 +122,17 @@
 								+ "</ul>"
 								+ "</div>";	
 
-				//dialog for title rename
-				var dialog_content = dialog_content
-									+ "<div data-role='dialog' id='dialog_" + local_title_adjust + "' data-theme='b' data-close-btn='right'>"
-									+ "<div data-role='header' data-position='fixed'>"
-									+ "<h1>Input New Title</h1>"
-									+ "</div>"
-									+ "<div data-role='content'>"
-									+ "<input type='text' class='new_title_" + local_title_adjust + "' value='" + local_title_adjust + "' autofocus>"
-									+ "<input type='button' value='Change Name' onclick=\"rename_title('" + local_title_adjust + "')\">"
-									+ "</div>"
-									+ "</div>";		
+				//dialog for title rename			
+				dialog_content = dialog_content
+								+ "<div data-role='dialog' id='dialog_" + local_title_adjust + "' data-theme='b' data-close-btn='right'>"
+								+ "<div data-role='header' data-position='fixed'>"
+								+ "<h1>Input New Title</h1>"
+								+ "</div>"
+								+ "<div data-role='content'>"
+								+ "<input type='text' class='new_title_" + local_title_adjust + "' value='" + local_title_adjust + "' autofocus>"
+								+ "<input type='button' value='Change Name' onclick=\"rename_title('" + local_title_adjust + "')\">"
+								+ "</div>"
+								+ "</div>";		
 				}
 			
 			//create list
@@ -157,17 +153,34 @@
 		
 		
 		//custom alert msg
-			function alert_dialog(msg){
-				//show dialog
-				$("#open_dialog").click();
-				
+			function alert_dialog(msg){				
 				//show button for confirm
 				$("div#confirm_button").addClass('hide');
 				$("div#alert_button").removeClass();
 				
 				//set message to dialog
-				$("h1.msg").empty();	
-				$("h1.msg").append(msg);
+				$("#dialog_msg .msg").text(msg);
+				
+				//show dialog
+				$.mobile.changePage("#dialog_msg");
+			}
+		//custom confirm msg
+			function confirm_dialog(msg, callback){
+				//show button for confirm
+				$("div#alert_button").addClass('hide');
+				$("div#confirm_button").removeClass();
+				
+				//set message to dialog				
+				$("#dialog_msg .msg").text(msg);
+				
+				//callback for click confirm
+				$("#dialog_msg .confirm").on("click.dialog_msg", function() {
+					callback();
+					$(this).off("click.dialog_msg");
+				});
+				
+				//show dialog
+				$.mobile.changePage("#dialog_msg");
 			}		
 	
 		
@@ -217,9 +230,7 @@
 		
 	</script>
 <body>
-<form name="decision" method="post" data-ajax="false" id="decision_form">
-	<a href="#dialog_msg" id="open_dialog" style="display:none;"></a><!--hyperlink for open dialog msg-->	
-	
+<form name="decision" method="post" data-ajax="false" id="decision_form">	
 	
 <!--Create-->
 <div data-role="page" id="CREATE" data-theme="b">
@@ -329,19 +340,17 @@
 
 <!--dialog for alert and confirm msg-->
 <div data-role="dialog" id="dialog_msg" data-theme="b" data-close-btn="right">
-	<div data-role="header" data-position="fixed">
-		<h1 class="msg"></h1>
-	</div>
 	<div data-role="content">
+		<h3 class="msg"></h3>
 		<div data-role="navbar" class="hide" id="confirm_button">
 			<ul>
-				<li><input type="submit" value="Yes" id="confirm"></li>
-				<li><input type="button" value="No" class="cancel"></li>
+				<li><a href="#" class="confirm" data-role="button" data-rel="back">Yes</a></li>
+				<li><a href="#" data-role="button" data-rel="back">No</a></li>
 			</ul>
 		</div>
 		<div data-role="navbar" class="hide" id="alert_button">
 			<ul class="hide" id="alert_button">
-				<li><input type="button" value="Yes" class="close"></li>
+				<li><a href="#" class="confirm" data-role="button" data-rel="back">OK</a></li>
 			</ul>
 		</div>
 	</div>
@@ -364,44 +373,45 @@
 		document.decision.title.focus();
 	}
 	function create_selection(){
+		var ori_title = document.decision.title.value.trim();
 		var title = constants.title_add + document.decision.title.value.trim();
 		var selection = document.decision.selection.value.trim();
 		var title_check = string_check(title);
 		var selection_check = string_check(selection);
 		var title_duplicate = localStorage.getItem(title);
-		if(title == "")
+		if(ori_title == "")
 		{
 		document.decision.title.focus();
-		alert_dialog("[ERROR]\nPlease input a title");
+		alert_dialog("Please input a title");
 		}
 		else if(title_check != "")
 		{
 			if((title_check == "") || (title_check == " "))
 			{title_check = "space";}
 		document.decision.title.select();
-		alert_dialog("[ERROR]\nPlease don\'t use " + title_check + " for title");
+		alert_dialog("Please don\'t use " + title_check + " for title");
 		}
 		else if(selection == "")
 		{
 		document.decision.selection.focus();
-		alert_dialog("[ERROR]\nPlease input selection");
+		alert_dialog("Please input selection");
 		}
 		else if(selection_check != "")
 		{
 			if((selection_check == "") || (selection_check == " "))
 			{selection_check = "space";}
 		document.decision.selection.select();
-		alert_dialog("[ERROR]\nPlease don\'t use " + selection_check + " for selection");
+		alert_dialog("Please don\'t use " + selection_check + " for selection");
 		}
 		else if(title_duplicate != null && title_duplicate !== undefined)
 		{
 		document.decision.selection.select();
-		alert_dialog("[ERROR]\nTitle has been used,\nplease choose another name.");
+		alert_dialog("Title has been used,\nplease choose another name.");
 		}
 		else
 		{
 		/*selection format adjust*/
-		var array_selection = selection.split("\n");
+		var array_selection = selection.split("\n").sort();
 		var new_selection = cleanArray(array_selection).join(constants.selection_separate);//selection separate character
 
 		/*set to localstorage*/
@@ -412,8 +422,9 @@
 		document.decision.selection.value = "";
 		
 		/*change to draw page*/
-		location.replace('decision.html#DRAW');
+		$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
 		localStorage.setItem(constants.drawing_title, title);
+		localStorage.removeItem(constants.editing_list);//close all list
 		location.reload();
 		}
 	}
@@ -449,24 +460,34 @@
 /*list page*/
 	function start_draw(x){
 		var original_title = constants.title_add + x;
-		location.replace('decision.html#DRAW');
+		$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
 		localStorage.setItem(constants.drawing_title, original_title);
 		location.reload();
 	}
 	function delete_group(x){
-		var original_title = constants.title_add + x;
-		localStorage.removeItem(original_title); 
-		location.replace('decision.html#LIST');
-		location.reload();
+		confirm_dialog("Confirm to delete this group", function(){	
+			var original_title = constants.title_add + x;
+			localStorage.removeItem(original_title); 
+			localStorage.removeItem(constants.editing_list);//close all list
+			location.replace('decision.html#LIST');
+			location.reload();
+		});		
 	}
 	function add_selection(x){
 		var original_title = constants.title_add + x;
 		var new_selection_class = "input.new_selection_" + x;
 		var new_selection_value = $(new_selection_class).val();
-		var local_value = localStorage.getItem(original_title) + constants.selection_separate + new_selection_value;
-		localStorage.setItem(original_title, local_value);
-		localStorage.setItem(constants.editing_list, original_title);
-		location.reload();		
+			if(new_selection_value == "")
+			{alert_dialog("Please input selection");}	
+			else
+			{
+			var local_value = localStorage.getItem(original_title) + constants.selection_separate + new_selection_value;
+			var array_local_value = local_value.split(constants.selection_separate).sort();
+			var new_local_value = array_local_value.join(constants.selection_separate);
+			localStorage.setItem(original_title, new_local_value);
+			localStorage.setItem(constants.editing_list, original_title);//set list open
+			location.reload();	
+			}		
 	}
 	function delete_selection(title,selection){
 		var original_title = constants.title_add + title;
@@ -475,7 +496,7 @@
 		array_local_value.splice(index,1);	
 		var local_value = array_local_value.join(constants.selection_separate);		
 		localStorage.setItem(original_title, local_value);
-		localStorage.setItem(constants.editing_list, original_title);
+		localStorage.setItem(constants.editing_list, original_title);//set list open
 		location.reload();	
 	}
 	function rename_title(title){
@@ -483,11 +504,17 @@
 		var local_value = localStorage.getItem(original_title);
 		var new_title_class = "input.new_title_" + title;
 		var new_title = constants.title_add + $(new_title_class).val();
-		
-		localStorage.setItem(new_title, local_value);
-		localStorage.removeItem(original_title); 
-		location.replace('decision.html#LIST');
-		location.reload();	
+		var new_title_check = $(new_title_class).val();
+			if(new_title_check == "")
+			{alert_dialog("Please input title");}	
+			else
+			{
+			localStorage.removeItem(original_title); 
+			localStorage.setItem(new_title, local_value);
+			localStorage.removeItem(constants.editing_list);//close all list
+			$.mobile.changePage("#LIST");//location.replace('decision.html#LIST');
+			location.reload();	
+			}
 	}
 
 </script>
