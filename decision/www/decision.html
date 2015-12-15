@@ -77,7 +77,7 @@
 			var array_local_title = select_localstorage(constants.title_add);
 			if(array_local_title)
 			{
-			var list_content = "<h2>Recent</h2>";
+			var list_content = "";
 			var dialog_content = "";
 				for(var j=0;j<array_local_title.length;j++)
 				{
@@ -226,6 +226,64 @@
 				{
 				return false;
 				}
+			}
+		
+		
+		//refresh list (after list been updated)
+			function refresh_list(){
+				var array_local_title = select_localstorage(constants.title_add);
+				if(array_local_title)
+				{
+				var list_content = "";
+				var dialog_content = "";
+					for(var j=0;j<array_local_title.length;j++)
+					{
+					var array_local_value = localStorage.getItem(array_local_title[j]).split(constants.selection_separate);
+					var local_title_adjust = array_local_title[j].replace(/^decision_/,"");
+					
+					//check if editing, default open list
+					var editing_list_title = localStorage.getItem(constants.editing_list);
+						if(editing_list_title == array_local_title[j])
+						{var close_list = "false";}
+						else
+						{var close_list = "true";}
+					
+					//navigator
+					list_content = list_content
+									+ "<div data-role='collapsible' data-collapsed='" + close_list + "'>"
+									+ "<h4>" + local_title_adjust + "<span class='ui-li-count'>" + array_local_value.length + "</span></h4>"
+									+ "<ul data-role='listview'>"
+									+ "<li data-icon='grid' data-theme='a' class='function'>"
+									+ "<div class='function ui-btn ui-icon-grid ui-btn-icon-left' onclick=\"start_draw('" + local_title_adjust + "')\">Draw</div>"
+									+ "<div class='function ui-btn ui-icon-edit ui-btn-icon-left'><a href='#dialog_" + local_title_adjust + "' data-rel='dialog' class='fill'>Edit</a></div>"
+									+ "<div class='function ui-btn ui-icon-delete ui-btn-icon-left' onclick=\"delete_group('" + local_title_adjust + "')\">Delete</div>"		
+									+ "</li>";								
+									//+ "<div class='function ui-btn ui-icon-star ui-btn-icon-left' onclick=\"add_myfavor('" + local_title_adjust + "')\">Favor</div>"	
+
+					//selection
+						for(var k=0;k<array_local_value.length;k++)
+						{
+						list_content = list_content
+										+ "<li data-icon='delete'>"
+										+ "<a href='#'>" + array_local_value[k] + "</a>"
+										+ "<a href='#' onclick=\"delete_selection('" + local_title_adjust + "','" + array_local_value[k] + "')\"></a>"
+										+ "</li>";				
+						}
+					
+					//add selection input
+					list_content = list_content
+									+ "<li data-icon='plus'>"
+									+ "<a class='unpadding' href='#'><input class='small new_selection_" + local_title_adjust + "'></a>"
+									+ "<a href='#' onclick=\"add_selection('" + local_title_adjust + "')\"></a>"					
+									+ "</li>"					
+									+ "</ul>"
+									+ "</div>";		
+					}
+				
+				//create list
+				$("div#list_last").empty();	
+				$("div#list_last").append(list_content);
+				}			
 			}
 		
 	</script>
@@ -446,7 +504,7 @@
 			return result;
 		}	
 		/*remove empty element*/
-		function cleanArray(actual) {
+		function cleanArray(actual){
 		  var newArray = new Array();
 		  for (var i = 0; i < actual.length; i++) {
 			if (actual[i]) {
@@ -469,8 +527,8 @@
 			var original_title = constants.title_add + x;
 			localStorage.removeItem(original_title); 
 			localStorage.removeItem(constants.editing_list);//close all list
-			location.replace('decision.html#LIST');
-			location.reload();
+			$.mobile.changePage("#LIST");//location.replace('decision.html#LIST');
+			location.reload();	
 		});		
 	}
 	function add_selection(x){
@@ -490,14 +548,16 @@
 			}		
 	}
 	function delete_selection(title,selection){
-		var original_title = constants.title_add + title;
-		var array_local_value = localStorage.getItem(original_title).split(constants.selection_separate);
-		var index = array_local_value.indexOf(selection);
-		array_local_value.splice(index,1);	
-		var local_value = array_local_value.join(constants.selection_separate);		
-		localStorage.setItem(original_title, local_value);
-		localStorage.setItem(constants.editing_list, original_title);//set list open
-		location.reload();	
+		confirm_dialog("Confirm to delete selection", function(){
+			var original_title = constants.title_add + title;
+			var array_local_value = localStorage.getItem(original_title).split(constants.selection_separate);
+			var index = array_local_value.indexOf(selection);
+			array_local_value.splice(index,1);	
+			var local_value = array_local_value.join(constants.selection_separate);		
+			localStorage.setItem(original_title, local_value);
+			localStorage.setItem(constants.editing_list, original_title);//set list open
+			location.reload();	
+		});
 	}
 	function rename_title(title){
 		var original_title = constants.title_add + title;
