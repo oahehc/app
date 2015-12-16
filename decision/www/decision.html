@@ -13,19 +13,21 @@
 </head>
 	<script language="JavaScript">
 		var constants = {
-			'title_add': 'decision_',
-			'selection_separate': '!!',
+			'title_add': 'oahehc_decision_',
+			'selection_separate': '!!!',
 			'max_width': 5,
-			'drawing_title': 'drawing_decision',
-			'editing_list': 'editing_decision'
+			'drawing_title': 'oahehc_drawing_decision',
+			'editing_list': 'oahehc_editing_decision'
 		};
 	
 	
 		$(function(){			
 		//purge localStorage
 			$("input#purge_data").click(function(){
-				localStorage.clear();
-				window.location.reload();
+				confirm_dialog("Confirm to purge all data", function(){
+					localStorage.clear();
+					refresh_list();	
+				});			
 			})	
 
 		//start draw
@@ -82,7 +84,7 @@
 				for(var j=0;j<array_local_title.length;j++)
 				{
 				var array_local_value = localStorage.getItem(array_local_title[j]).split(constants.selection_separate);
-				var local_title_adjust = array_local_title[j].replace(/^decision_/,"");
+				var local_title_adjust = array_local_title[j].replace(/^oahehc_decision_/,"");
 				
 				//check if editing, default open list
 				var editing_list_title = localStorage.getItem(constants.editing_list);
@@ -124,7 +126,7 @@
 
 				//dialog for title rename			
 				dialog_content = dialog_content
-								+ "<div data-role='dialog' id='dialog_" + local_title_adjust + "' data-theme='b' data-close-btn='right'>"
+								+ "<div class='rename_dialog' data-role='dialog' id='dialog_" + local_title_adjust + "' data-theme='b' data-close-btn='right'>"
 								+ "<div data-role='header' data-position='fixed'>"
 								+ "<h1>Input New Title</h1>"
 								+ "</div>"
@@ -140,6 +142,7 @@
 			$("div#list_last").append(list_content);
 			
 			//create dialog for group title rename
+			$(".rename_dialog").remove();
 			$("form#decision_form").append(dialog_content);	
 			}
 		
@@ -239,7 +242,7 @@
 					for(var j=0;j<array_local_title.length;j++)
 					{
 					var array_local_value = localStorage.getItem(array_local_title[j]).split(constants.selection_separate);
-					var local_title_adjust = array_local_title[j].replace(/^decision_/,"");
+					var local_title_adjust = array_local_title[j].replace(/^oahehc_decision_/,"");
 					
 					//check if editing, default open list
 					var editing_list_title = localStorage.getItem(constants.editing_list);
@@ -277,13 +280,31 @@
 									+ "<a href='#' onclick=\"add_selection('" + local_title_adjust + "')\"></a>"					
 									+ "</li>"					
 									+ "</ul>"
-									+ "</div>";		
+									+ "</div>";	
+
+					//dialog for title rename			
+					dialog_content = dialog_content
+									+ "<div class='rename_dialog' data-role='dialog' id='dialog_" + local_title_adjust + "' data-theme='b' data-close-btn='right'>"
+									+ "<div data-role='header' data-position='fixed'>"
+									+ "<h1>Input New Title</h1>"
+									+ "</div>"
+									+ "<div data-role='content'>"
+									+ "<input type='text' class='new_title_" + local_title_adjust + "' value='" + local_title_adjust + "' autofocus>"
+									+ "<input type='button' value='Change Name' onclick=\"rename_title('" + local_title_adjust + "')\">"
+									+ "</div>"
+									+ "</div>";										
 					}
 				
 				//create list
 				$("div#list_last").empty();	
-				$("div#list_last").append(list_content);
+				$("div#list_last").append(list_content).trigger("create");
+				
+				//add rename dialog
+				$(".rename_dialog").remove();
+				$("form#decision_form").append(dialog_content);	
 				}			
+				else
+				{$("div#list_last").empty();}
 			}
 		
 	</script>
@@ -480,10 +501,11 @@
 		document.decision.selection.value = "";
 		
 		/*change to draw page*/
-		$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
 		localStorage.setItem(constants.drawing_title, title);
 		localStorage.removeItem(constants.editing_list);//close all list
-		location.reload();
+		refresh_list();	
+		create_draw_content(title);
+		$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
 		}
 	}
 		/*special character check*/
@@ -520,7 +542,7 @@
 		var original_title = constants.title_add + x;
 		$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
 		localStorage.setItem(constants.drawing_title, original_title);
-		location.reload();
+		create_draw_content(original_title);
 	}
 	function delete_group(x){
 		confirm_dialog("Confirm to delete this group", function(){	
@@ -528,7 +550,7 @@
 			localStorage.removeItem(original_title); 
 			localStorage.removeItem(constants.editing_list);//close all list
 			$.mobile.changePage("#LIST");//location.replace('decision.html#LIST');
-			location.reload();	
+			refresh_list();	
 		});		
 	}
 	function add_selection(x){
@@ -544,7 +566,7 @@
 			var new_local_value = array_local_value.join(constants.selection_separate);
 			localStorage.setItem(original_title, new_local_value);
 			localStorage.setItem(constants.editing_list, original_title);//set list open
-			location.reload();	
+			refresh_list();	
 			}		
 	}
 	function delete_selection(title,selection){
@@ -556,7 +578,7 @@
 			var local_value = array_local_value.join(constants.selection_separate);		
 			localStorage.setItem(original_title, local_value);
 			localStorage.setItem(constants.editing_list, original_title);//set list open
-			location.reload();	
+			refresh_list();	
 		});
 	}
 	function rename_title(title){
