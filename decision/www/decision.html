@@ -25,8 +25,10 @@
 		//purge localStorage
 			$("input#purge_data").click(function(){
 				confirm_dialog("Confirm to purge all data", function(){
-					localStorage.clear();
-					refresh_list();	
+					localstorage_purge(constants.title_add);
+					$("div#selection_content").empty();
+					$("div#list_last").empty();	
+					$(".rename_dialog").remove();
 				});			
 			})	
 
@@ -209,6 +211,9 @@
 				$("div#selection_content").append(selection_content);
 			}
 
+		
+			
+			
 		//function to filter localstorage
 			function select_localstorage(filter){
 				if(localStorage.length != 0)
@@ -230,7 +235,19 @@
 				return false;
 				}
 			}
-		
+			
+		//function to purge localstorage
+			function localstorage_purge(filter){
+				if(localStorage.length != 0)
+				{
+					for(var i=(localStorage.length - 1); i>=0; i--)
+					{		
+						check = localStorage.key(i).indexOf(filter);
+						if(check == 0)
+						{localStorage.removeItem(localStorage.key(i));}					
+					}
+				}
+			}		
 		
 		//refresh list (after list been updated)
 			function refresh_list(){
