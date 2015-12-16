@@ -584,6 +584,7 @@
 			localStorage.setItem(original_title, new_local_value);
 			localStorage.setItem(constants.editing_list, original_title);//set list open
 			refresh_list();	
+			create_draw_content(original_title);
 			}		
 	}
 	function delete_selection(title,selection){
@@ -596,6 +597,7 @@
 			localStorage.setItem(original_title, local_value);
 			localStorage.setItem(constants.editing_list, original_title);//set list open
 			refresh_list();	
+			create_draw_content(original_title);
 		});
 	}
 	function rename_title(title){
