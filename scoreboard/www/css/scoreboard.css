@@ -1,22 +1,25 @@
 body{
 	font-family:Calibri, Arial, 微軟正黑體;
-	font-size:1em;
+	font-size:1.2em;
+	background-color:black;
 }
 
 
-input,select{
+input,select,textarea{
 	font-family:Calibri, Arial, 微軟正黑體;	
+	font-size:1.2em;
 }
-	input.button{
-		width:100px;
-	}		
-	input.short{
-		width:60px;
-	}		
-	input.center{
-		text-align:center;
-	}	
-
+textarea{
+	overflow-x:hidden;
+	overflow-y:auto;
+	height:100px;
+	width:300px;
+	margin-top:10px;
+}
+input.text{
+	width:300px;
+}
+	
 	
 table{
 	border-collapse:collapse;
@@ -26,37 +29,3 @@ td{
 	border:1px solid black;
 	padding:3px 5px;
 }
-	td.unborder{
-		border:0px;
-	}
-	td.unpadding{
-		padding:0px;
-	}
-	td.right{
-		text-align:right;
-	}
-	td.center{
-		text-align:center;
-	}
-	td.bold{
-		font-weight:bold;
-	}
-	td.upperline{
-		border:0px;
-		border-top:2px solid black;
-	}
-	tr.lightgray{
-		background:lightgray;
-	}
-	td.short{
-		width:60px;
-	}
-	td.red{
-		color:red;
-	}
-	td.small{
-		font-size:0.8em;
-	}
-	td.middle{
-		font-size:0.9em;
-	}	

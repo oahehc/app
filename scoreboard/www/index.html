@@ -7,14 +7,143 @@
 		<title>ScoreBoard</title>
     </head>
 	<script language="JavaScript">
+		var constants = {
+			'title_add': 'oahehc_scoreboard_',
+		};
+		
 		$(function(){	
 		
 		})
+				
+		//reset input
+		function input_reset(){
+			document.scoreboard.title.value = "";
+			document.scoreboard.player.value = "";
+			document.scoreboard.title.focus();
+		}
+		
+		//game create
+		function game_create(){
+			//get input
+			var title = document.scoreboard.title.value.trim();
+			var title_adjust = constants.title_add + title;
+			var player = document.scoreboard.player.value.trim();
+			var title_check = string_check(title);
+			var player_check = string_check(player);
+			var title_duplicate = localStorage.getItem(title_adjust);	
+			
+			//input format check
+			if(title == "")
+			{
+			document.scoreboard.title.focus();
+			alert("Please input a title");
+			}
+			else if(title_check != "")
+			{
+				if((title_check == "") || (title_check == " "))
+				{title_check = "space";}
+			document.scoreboard.title.select();
+			alert("Please don\'t use " + title_check + " for title");
+			}
+			else if(player == "")
+			{
+			document.scoreboard.player.focus();
+			alert("Please input player");
+			}
+			else if(player_check != "")
+			{
+				if((player_check == "") || (player_check == " "))
+				{player_check = "space";}
+			document.scoreboard.player.select();
+			alert("Please don\'t use " + player_check + " for player");
+			}
+			else if(title_duplicate != null && title_duplicate !== undefined)
+			{
+			document.scoreboard.player.select();
+			alert("Title has been used,\nplease choose another name.");
+			}
+			else
+			{
+			//set json structure
+			var json = '{"GameTitle": 
+							[
+							{"player": "allen", "round": ["0","-10","50"]},
+							{"player": "andrew", "round": ["80","100","50"]},
+							]
+						}';
+
+			
+			
+			
+/*player format adjust*/
+var array_player = player.split("\n").sort();
+var new_player = cleanArray(array_player).join(constants.selection_separate);//player separate character
+
+
+
+
+
+/*set to localstorage*/
+localStorage[title] = new_selection;
+
+/*clear input*/
+document.scoreboard.title.value = "";
+document.scoreboard.player.value = "";
+
+/*change to round page*/
+localStorage.setItem(constants.drawing_title, title);
+localStorage.removeItem(constants.editing_list);//close all list
+refresh_list();	
+create_draw_content(title);
+$.mobile.changePage("#DRAW");//location.replace('decision.html#DRAW');
+			}	
+		}
+			/*special character check*/
+			function string_check(x){
+				var array_result = new Array;
+				var check = new String;
+				var result = new String;
+				for(var i=0;i<x.length;i++)
+				{
+					check = x[i].match('[0-9|A-Za-z|@$()_|\n-]');
+					if(check === null)
+					{
+						if((jQuery.inArray(x[i], array_result)) == -1)//remove repeated character
+						{array_result.push(x[i]);}
+					}
+				}
+				var result = array_result.join(" ");
+				return result;
+			}	
+			/*remove empty element*/
+			function cleanArray(actual){
+				var newArray = new Array();
+				for (var i = 0; i < actual.length; i++) {
+					if (actual[i]) {
+					newArray.push(actual[i]);
+					}
+				}
+				return newArray;
+			}		
+		
 	</script>
     <body>
-	<form name="scoreboard" method="POST">	
+	<form name="scoreboard" method="POST">
+	<!--Page : Create-->
+	<div class="create">
+		<input type="text" class="text" name="title" placeholder="Game Title" autofocus>
+		<br>
+		<textarea name="player" placeholder="Player 1&#10;Player 2&#10;Player 3 ..."></textarea>
+		<br>
+		<input type="button" value="Create" onclick="game_create()">
+		<input type="button" value="Reset" onclick="input_reset()">
+	</div>
 	
-	
+	<!--Page : Round-->
+		
+		
+		
+	<!--Page : List-->
 		
 		
 		
